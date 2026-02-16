@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { fetchPageBySlug, logView } from '../services/supabase'
-import { fadeInUp, fadeInScale, containerVariants, itemVariants } from '../utils/animations'
+import { containerVariants, itemVariants } from '../utils/animations'
 import { BACKGROUND_STYLES, VALENTINE_WISH_TYPES } from '../utils/constants'
 
 // Floating hearts component
 const FloatingHearts = () => {
   const hearts = ['❤️', '💕', '💖', '💗', '💝', '💘']
-  const [floatingHearts, setFloatingHearts] = useState<Array<{id: number, emoji: string, left: number, delay: number}>>([])
+  const [floatingHearts, setFloatingHearts] = useState<Array<{ id: number, emoji: string, left: number, delay: number }>>([])
 
   useEffect(() => {
     const newHearts = Array.from({ length: 8 }, (_, i) => ({
@@ -26,12 +26,12 @@ const FloatingHearts = () => {
         <motion.div
           key={heart.id}
           initial={{ y: '100vh', opacity: 0 }}
-          animate={{ 
-            y: '-100vh', 
+          animate={{
+            y: '-100vh',
             opacity: [0, 1, 0],
             x: [0, heart.left - 50, heart.left - 50]
           }}
-          transition={{ 
+          transition={{
             duration: 8 + heart.delay,
             ease: 'easeOut',
             repeat: Infinity,
@@ -79,6 +79,13 @@ const ViewPage: React.FC = () => {
     }
   }, [started, countdown])
 
+  // Auto-start countdown when page loads
+  useEffect(() => {
+    if (page && !started) {
+      setStarted(true)
+    }
+  }, [page, started])
+
   useEffect(() => {
     if (!slug) return
 
@@ -93,7 +100,6 @@ const ViewPage: React.FC = () => {
         setLoading(false)
       }
     }
-
     fetchPage()
   }, [slug])
 
@@ -127,9 +133,9 @@ const ViewPage: React.FC = () => {
 
   const renderValentineWishPage = () => {
     const wishType = VALENTINE_WISH_TYPES.find(w => w.id === page.content.wishType)
-    const template = wishType?.template || ''
-    const personalizedMessage = template.replace('{name}', page.content.receiverName)
-    
+    const template = wishType?.template || 'Happy Valentine\'s Day!'
+    const personalizedMessage = template.replace('{name}', page.content.receiverName || 'You')
+
     return (
       <motion.div
         variants={containerVariants}
@@ -139,7 +145,7 @@ const ViewPage: React.FC = () => {
       >
         {/* Floating hearts for Valentine's Day */}
         {isValentineDay && <FloatingHearts />}
-        
+
         <div className="max-w-2xl w-full text-center z-10">
           <motion.div
             variants={itemVariants}
@@ -149,7 +155,7 @@ const ViewPage: React.FC = () => {
           >
             💝
           </motion.div>
-          
+
           <motion.h1
             variants={itemVariants}
             className="text-3xl sm:text-4xl md:text-5xl font-bold text-pink-700 mb-8"
@@ -158,7 +164,7 @@ const ViewPage: React.FC = () => {
           >
             Happy Valentine's Day!
           </motion.h1>
-          
+
           <motion.div
             variants={itemVariants}
             className="bg-white/90 backdrop-blur rounded-2xl p-6 sm:p-8 shadow-xl mb-8 border-2 border-pink-200"
@@ -167,7 +173,7 @@ const ViewPage: React.FC = () => {
             <h2 className="text-xl sm:text-2xl text-pink-600 mb-6">
               Dear {page.content.receiverName},
             </h2>
-            
+
             <div className="text-base sm:text-lg text-gray-700 leading-relaxed space-y-4">
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
@@ -187,7 +193,7 @@ const ViewPage: React.FC = () => {
                 </motion.p>
               )}
             </div>
-            
+
             {page.content.signature && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -201,12 +207,12 @@ const ViewPage: React.FC = () => {
               </motion.div>
             )}
           </motion.div>
-          
+
           <motion.div
             variants={itemVariants}
             className="text-4xl sm:text-6xl"
-            animate={{ 
-              scale: [1, 1.3, 1], 
+            animate={{
+              scale: [1, 1.3, 1],
               rotate: [0, 5, -5, 0],
               filter: ['hue-rotate(0deg)', 'hue-rotate(360deg)', 'hue-rotate(0deg)']
             }}
@@ -228,7 +234,7 @@ const ViewPage: React.FC = () => {
     >
       {/* Floating hearts for Valentine's Day */}
       {isValentineDay && <FloatingHearts />}
-      
+
       <div className="max-w-2xl w-full text-center z-10">
         <motion.h1
           variants={itemVariants}
@@ -238,7 +244,7 @@ const ViewPage: React.FC = () => {
         >
           {page.content.title}
         </motion.h1>
-        
+
         <motion.h2
           variants={itemVariants}
           className="text-xl sm:text-2xl text-blue-700 mb-12"
@@ -247,7 +253,7 @@ const ViewPage: React.FC = () => {
         >
           Dear {page.content.receiverName},
         </motion.h2>
-        
+
         <motion.div
           variants={itemVariants}
           className="bg-white/90 backdrop-blur rounded-2xl p-6 sm:p-8 shadow-xl"
@@ -257,7 +263,7 @@ const ViewPage: React.FC = () => {
             {page.content.message}
           </p>
         </motion.div>
-        
+
         <motion.div
           variants={itemVariants}
           className="mt-12"
@@ -279,7 +285,7 @@ const ViewPage: React.FC = () => {
     >
       {/* Floating hearts for Valentine's Day */}
       {isValentineDay && <FloatingHearts />}
-      
+
       <div className="max-w-2xl w-full text-center z-10">
         <motion.h1
           variants={itemVariants}
@@ -289,7 +295,7 @@ const ViewPage: React.FC = () => {
         >
           Dear {page.content.receiverName},
         </motion.h1>
-        
+
         <motion.div
           variants={itemVariants}
           className="bg-white/90 backdrop-blur rounded-2xl p-6 sm:p-8 shadow-xl mb-8 border-2 border-pink-200"
@@ -298,7 +304,7 @@ const ViewPage: React.FC = () => {
           <h2 className="text-xl sm:text-2xl text-pink-600 mb-6">
             {page.content.questionText || 'Will you be my Valentine?'}
           </h2>
-          
+
           <motion.div
             className="text-6xl sm:text-8xl mb-8"
             animate={{ rotate: [0, 15, -15, 0] }}
@@ -307,7 +313,7 @@ const ViewPage: React.FC = () => {
             💘
           </motion.div>
         </motion.div>
-        
+
         <AnimatePresence>
           {!showCelebration && (
             <motion.div
@@ -328,7 +334,7 @@ const ViewPage: React.FC = () => {
                   transition={{ duration: 0.3 }}
                 />
               </motion.button>
-              
+
               <motion.button
                 animate={{
                   x: noButtonPosition.x,
@@ -344,7 +350,7 @@ const ViewPage: React.FC = () => {
             </motion.div>
           )}
         </AnimatePresence>
-        
+
         <AnimatePresence>
           {showCelebration && (
             <motion.div
@@ -366,7 +372,7 @@ const ViewPage: React.FC = () => {
               <p className="text-lg sm:text-xl text-gray-700">
                 This is going to be amazing!
               </p>
-              
+
               {/* Celebration hearts */}
               <motion.div
                 className="flex justify-center gap-2 mt-6"
@@ -421,7 +427,7 @@ const ViewPage: React.FC = () => {
       >
         {/* Floating hearts for Valentine's Day */}
         {isValentineDay && <FloatingHearts />}
-        
+
         <div className="text-center max-w-md w-full z-10">
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
@@ -451,7 +457,7 @@ const ViewPage: React.FC = () => {
               transition={{ duration: 0.3 }}
             />
           </motion.button>
-          
+
           {isValentineDay && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -479,7 +485,7 @@ const ViewPage: React.FC = () => {
       >
         {/* Floating hearts for Valentine's Day */}
         {isValentineDay && <FloatingHearts />}
-        
+
         <div className="text-center z-10">
           <motion.div
             animate={{ scale: [1, 1.3, 1] }}
@@ -488,11 +494,11 @@ const ViewPage: React.FC = () => {
           >
             💝
           </motion.div>
-          
+
           <h2 className="text-2xl sm:text-3xl font-bold text-pink-600 mb-4">
             Get ready for your surprise...
           </h2>
-          
+
           <motion.div
             key={countdown}
             initial={{ scale: 0, opacity: 0 }}
@@ -502,15 +508,14 @@ const ViewPage: React.FC = () => {
           >
             {countdown}
           </motion.div>
-          
+
           <div className="mt-8">
             <div className="flex justify-center space-x-2">
               {[1, 2, 3, 4, 5].map((num) => (
                 <div
                   key={num}
-                  className={`w-3 h-3 rounded-full ${
-                    num <= 5 - countdown ? 'bg-pink-400' : 'bg-pink-200'
-                  }`}
+                  className={`w-3 h-3 rounded-full ${num <= 5 - countdown ? 'bg-pink-400' : 'bg-pink-200'
+                    }`}
                 />
               ))}
             </div>
