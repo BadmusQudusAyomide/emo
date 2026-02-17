@@ -100,3 +100,19 @@ export const saveResponse = async (pageId: string, response: string) => {
     throw new Error('Failed to save response.')
   }
 }
+
+export const fetchResponsesByPageId = async (pageId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('responses')
+      .select('*')
+      .eq('page_id', pageId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error('Error fetching responses:', error)
+    throw new Error('Failed to fetch responses.')
+  }
+}

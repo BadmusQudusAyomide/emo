@@ -8,6 +8,10 @@ const ChooseType: React.FC = () => {
   const navigate = useNavigate()
 
   const handleTypeSelect = (type: string) => {
+    if (type === PAGE_TYPES.ANONYMOUS) {
+      navigate('/anonymous')
+      return
+    }
     navigate(`/create/${type}`)
   }
 
@@ -34,26 +38,33 @@ const ChooseType: React.FC = () => {
           animate="visible"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {Object.entries(PAGE_TYPE_CONFIG).map(([type, config]) => (
-            <motion.div
-              key={type}
-              variants={itemVariants}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => handleTypeSelect(type)}
-              className={`p-6 rounded-xl cursor-pointer border-2 transition-all border-gray-200 hover:border-pink-300`}
-            >
-              <div className="text-4xl mb-4 text-center">
-                {config.title.split(' ')[0]}
-              </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                {config.title.split(' ').slice(1).join(' ')}
-              </h3>
-              <p className="text-gray-600 text-sm">
-                {config.description}
-              </p>
-            </motion.div>
-          ))}
+          {Object.entries(PAGE_TYPE_CONFIG).map(([type, config]) => {
+            const isAnonymous = type === PAGE_TYPES.ANONYMOUS
+            return (
+              <motion.div
+                key={type}
+                variants={itemVariants}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handleTypeSelect(type)}
+                className={`p-6 rounded-xl cursor-pointer border-2 transition-all ${
+                  isAnonymous
+                    ? 'border-[#7A3E00] bg-[#FFF8ED] shadow-[0_10px_30px_rgba(122,62,0,0.15)]'
+                    : 'border-gray-200 hover:border-pink-300'
+                }`}
+              >
+                <div className="text-4xl mb-4 text-center">
+                  {config.title.split(' ')[0]}
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                  {isAnonymous ? 'Anonymous Inbox' : config.title.split(' ').slice(1).join(' ')}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                  {isAnonymous ? 'Generate a link and collect messages in one place' : config.description}
+                </p>
+              </motion.div>
+            )
+          })}
         </motion.div>
 
         <motion.div

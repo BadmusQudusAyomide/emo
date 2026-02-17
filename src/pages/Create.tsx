@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { PAGE_TYPES, PAGE_TYPE_CONFIG, TONES, OCCASIONS, BACKGROUND_STYLES, MAX_MESSAGE_LENGTH, VALENTINE_WISH_TYPES } from '../utils/constants'
@@ -19,6 +19,12 @@ const Create: React.FC = () => {
 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (type === PAGE_TYPES.ANONYMOUS) {
+      navigate('/anonymous')
+    }
+  }, [type, navigate])
 
   if (!type || !PAGE_TYPE_CONFIG[type as keyof typeof PAGE_TYPE_CONFIG]) {
     return <div>Invalid page type</div>

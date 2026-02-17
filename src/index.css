@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @layer base {
@@ -18,4 +19,12 @@
   .page-container {
     @apply min-h-screen bg-gradient-to-br from-pink-50 to-pink-100;
   }
+}
+
+.anon-theme {
+  font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+}
+
+.anon-title {
+  font-family: "Fraunces", ui-serif, Georgia, serif;
 }
