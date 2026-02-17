@@ -291,6 +291,20 @@ const ViewPage: React.FC = () => {
     )
   }
 
+  const renderValentineLocked = () => (
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-pink-100 flex items-center justify-center px-4 relative">
+      <div className="max-w-xl w-full text-center bg-white/90 backdrop-blur rounded-3xl p-8 shadow-2xl border border-pink-200">
+        <div className="text-5xl mb-4">💝</div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-pink-700">
+          This is not Valentine's season
+        </h1>
+        <p className="text-slate-600 mt-3">
+          Come back on February 14 to unlock this page.
+        </p>
+      </div>
+    </div>
+  )
+
   const renderValentinePage = () => (
     <motion.div
       variants={containerVariants}
@@ -1023,9 +1037,9 @@ const renderBirthdayAdvancePage = () => {
 
   switch (page.type) {
     case 'valentine':
-      return renderValentinePage()
+      return isValentineDay ? renderValentinePage() : renderValentineLocked()
     case 'valentine_wish':
-      return renderValentineWishPage()
+      return isValentineDay ? renderValentineWishPage() : renderValentineLocked()
     case 'anonymous':
       return renderAnonymousPage()
     case 'birthday':
