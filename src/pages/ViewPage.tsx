@@ -133,97 +133,66 @@ const ViewPage: React.FC = () => {
   }
 
   const renderValentineWishPage = () => {
+    console.log('🎯 Rendering Valentine Wish Page')
+    console.log('📄 Page data:', page)
+    console.log('📝 Page content:', page.content)
+    console.log('🏷️ Wish type:', page.content.wishType)
+    console.log('👤 Receiver name:', page.content.receiverName)
+    console.log('💬 Custom message:', page.content.customMessage)
+    console.log('✍️ Signature:', page.content.signature)
+    console.log('💝 Show message state:', showMessage)
+    console.log('💝 Started state:', started)
+
     const wishType = VALENTINE_WISH_TYPES.find(w => w.id === page.content.wishType)
     const template = wishType?.template || 'Happy Valentine\'s Day!'
     const personalizedMessage = template.replace('{name}', page.content.receiverName || 'You')
 
+    console.log('💌 Personalized message:', personalizedMessage)
+
     return (
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="min-h-screen bg-gradient-to-br from-pink-50 to-pink-100 flex items-center justify-center px-4 relative"
-      >
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-pink-100 flex items-center justify-center px-4 relative">
         {/* Floating hearts for Valentine's Day */}
         {isValentineDay && <FloatingHearts />}
 
         <div className="max-w-2xl w-full text-center z-10">
-          <motion.div
-            variants={itemVariants}
-            className="text-6xl sm:text-8xl mb-8"
-            animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-            transition={{ duration: 4, repeat: Infinity }}
-          >
+          <div className="text-6xl sm:text-8xl mb-8">
             💝
-          </motion.div>
+          </div>
 
-          <motion.h1
-            variants={itemVariants}
-            className="text-3xl sm:text-4xl md:text-5xl font-bold text-pink-900 mb-8"
-            animate={{ textShadow: ['0 0 20px rgba(236,72,153,0.5)', '0 0 40px rgba(236,72,153,0.3)', '0 0 20px rgba(236,72,153,0.5)'] }}
-            transition={{ duration: 3, repeat: Infinity }}
-          >
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-pink-900 mb-8">
             Happy Valentine's Day!
-          </motion.h1>
+          </h1>
 
-          <motion.div
-            variants={itemVariants}
-            className="bg-white rounded-2xl p-6 sm:p-8 shadow-2xl mb-8 border-4 border-pink-400"
-            whileHover={{ scale: 1.02, boxShadow: '0 20px 40px rgba(236,72,153,0.3)' }}
-          >
+          <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-2xl mb-8 border-4 border-pink-400">
             <h2 className="text-xl sm:text-2xl text-pink-900 mb-6 font-bold">
               Dear {page.content.receiverName},
             </h2>
 
             <div className="text-base sm:text-lg text-black leading-relaxed space-y-4">
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="text-black font-medium"
-              >
+              <p className="text-black font-medium">
                 {personalizedMessage}
-              </motion.p>
+              </p>
               {page.content.customMessage && (
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1 }}
-                  className="italic text-pink-900 font-bold bg-pink-50 p-3 rounded-lg"
-                >
+                <p className="italic text-pink-900 font-bold bg-pink-50 p-3 rounded-lg">
                   "{page.content.customMessage}"
-                </motion.p>
+                </p>
               )}
             </div>
 
             {page.content.signature && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.5 }}
-                className="mt-6 sm:mt-8 text-base sm:text-lg font-bold text-pink-900 border-t-4 border-pink-400 pt-4"
-              >
+              <div className="mt-6 sm:mt-8 text-base sm:text-lg font-bold text-pink-900 border-t-4 border-pink-400 pt-4">
                 With all my love,<br />
                 <span className="text-pink-800">{page.content.signature}</span>
                 <div className="text-2xl mt-2">💕</div>
-              </motion.div>
+              </div>
             )}
-          </motion.div>
+          </div>
 
-          <motion.div
-            variants={itemVariants}
-            className="text-4xl sm:text-6xl"
-            animate={{
-              scale: [1, 1.3, 1],
-              rotate: [0, 5, -5, 0],
-              filter: ['hue-rotate(0deg)', 'hue-rotate(360deg)', 'hue-rotate(0deg)']
-            }}
-            transition={{ duration: 3, repeat: Infinity }}
-          >
+          <div className="text-4xl sm:text-6xl">
             💕
-          </motion.div>
+          </div>
         </div>
-      </motion.div>
+      </div>
     )
   }
 
@@ -785,14 +754,19 @@ const ViewPage: React.FC = () => {
 
   switch (page.type) {
     case 'message':
+      console.log('🎯 Rendering message page')
       return renderMessagePage()
     case 'valentine':
+      console.log('🎯 Rendering valentine page')
       return renderValentinePage()
     case 'valentine_wish':
+      console.log('🎯 Rendering valentine_wish page')
       return renderValentineWishPage()
     case 'anonymous':
+      console.log('🎯 Rendering anonymous page')
       return renderAnonymousPage()
     default:
+      console.log('❌ Page type not implemented:', page.type)
       return <div>Page type not implemented yet</div>
   }
 }
