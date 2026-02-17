@@ -18,7 +18,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 export interface Page {
   id: string
   slug: string
-  type: 'message' | 'memory' | 'qa' | 'valentine' | 'valentine_wish' | 'anonymous'
+  type: 'memory' | 'valentine' | 'valentine_wish' | 'anonymous' | 'birthday' | 'birthday_advance'
   tone: 'romantic' | 'playful' | 'mixed'
   occasion: 'valentine' | 'birthday' | 'other'
   content: Record<string, any>

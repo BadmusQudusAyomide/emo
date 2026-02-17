@@ -6,6 +6,7 @@ const AnonymousCreate: React.FC = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [slug, setSlug] = useState<string | null>(null)
+  const [ownerToken, setOwnerToken] = useState<string | null>(null)
   const [copied, setCopied] = useState<'public' | 'inbox' | null>(null)
 
   const handleCreate = async () => {
@@ -14,19 +15,22 @@ const AnonymousCreate: React.FC = () => {
 
     try {
       const newSlug = Math.random().toString(36).substring(2, 15)
+      const owner = Math.random().toString(36).substring(2, 12)
       const pageData = {
         slug: newSlug,
         type: 'anonymous' as const,
         tone: 'mixed' as const,
         occasion: 'other' as const,
         content: {
-          prompt: 'Say something real. Be kind.'
+          prompt: 'Say something real. Be kind.',
+          ownerToken: owner
         },
         is_anonymous: true
       }
 
       await createPage(pageData)
       setSlug(newSlug)
+      setOwnerToken(owner)
     } catch (err) {
       setError('Failed to generate your link. Please try again.')
     } finally {
@@ -45,7 +49,9 @@ const AnonymousCreate: React.FC = () => {
   }
 
   const publicUrl = slug ? `${window.location.origin}/anonymous/${slug}` : ''
-  const inboxUrl = slug ? `${window.location.origin}/anonymous/${slug}/inbox` : ''
+  const inboxUrl = slug && ownerToken
+    ? `${window.location.origin}/anonymous/${slug}/inbox?token=${ownerToken}`
+    : ''
 
   return (
     <div className="anon-theme min-h-screen bg-[#F7F2E8] text-[#1B1B1B] px-4 py-12">
@@ -122,7 +128,7 @@ const AnonymousCreate: React.FC = () => {
                       {copied === 'inbox' ? 'Copied' : 'Copy inbox link'}
                     </button>
                     <a
-                      href={`/anonymous/${slug}/inbox`}
+                      href={`/anonymous/${slug}/inbox?token=${ownerToken}`}
                       className="px-4 py-2 rounded-lg border border-[#1B1B1B] text-[#1B1B1B] text-sm font-semibold hover:bg-[#F2E6D8]"
                     >
                       Open inbox

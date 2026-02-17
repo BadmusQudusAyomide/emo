@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { fetchPageBySlug, fetchResponsesByPageId } from '../services/supabase'
 
@@ -10,29 +10,46 @@ const AnonymousInbox: React.FC = () => {
   const [responses, setResponses] = useState<any[]>([])
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  const [searchParams] = useSearchParams()
+  const token = searchParams.get('token') || ''
 
   const publicUrl = slug ? `${window.location.origin}/anonymous/${slug}` : ''
 
-  const loadData = async () => {
+  const loadData = async (silent = false) => {
     if (!slug) return
-    setLoading(true)
+    if (!silent) setLoading(true)
     setError('')
 
     try {
       const pageData = await fetchPageBySlug(slug)
+      const ownerToken = pageData?.content?.ownerToken || ''
+      if (!ownerToken || ownerToken !== token) {
+        setError('Unauthorized inbox access.')
+        setPage(null)
+        setResponses([])
+        return
+      }
       setPage(pageData)
       const responseData = await fetchResponsesByPageId(pageData.id)
       setResponses(responseData)
     } catch (err) {
       setError('Unable to load this inbox.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
   useEffect(() => {
     loadData()
-  }, [slug])
+  }, [slug, token])
+
+  useEffect(() => {
+    if (!slug || !token) return
+    const interval = setInterval(() => {
+      loadData(true)
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [slug, token])
 
   const handleCopy = async () => {
     try {
@@ -57,7 +74,7 @@ const AnonymousInbox: React.FC = () => {
       <div className="anon-theme min-h-screen bg-[#F7F2E8] flex items-center justify-center px-4">
         <div className="text-center text-[#5C5C5C]">
           <div className="anon-title text-3xl text-[#1B1B1B]">Inbox not found</div>
-          <p className="mt-3">This inbox might have expired or the link is wrong.</p>
+          <p className="mt-3">{error || 'This inbox might have expired or the link is wrong.'}</p>
         </div>
       </div>
     )

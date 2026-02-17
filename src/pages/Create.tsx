@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { PAGE_TYPES, PAGE_TYPE_CONFIG, TONES, OCCASIONS, BACKGROUND_STYLES, MAX_MESSAGE_LENGTH, VALENTINE_WISH_TYPES } from '../utils/constants'
+import { PAGE_TYPES, PAGE_TYPE_CONFIG, TONES, OCCASIONS, MAX_MESSAGE_LENGTH, VALENTINE_WISH_TYPES } from '../utils/constants'
 import { fadeInUp, containerVariants, itemVariants } from '../utils/animations'
 import { createPage } from '../services/supabase'
+
+const birthdayThemes = [
+  { id: 'gold', name: 'Gold Glow', class: 'bg-gradient-to-br from-amber-100 to-rose-100' },
+  { id: 'sky', name: 'Sky Bright', class: 'bg-gradient-to-br from-sky-100 to-blue-50' },
+  { id: 'garden', name: 'Garden Soft', class: 'bg-gradient-to-br from-emerald-100 to-teal-50' }
+]
 
 const Create: React.FC = () => {
   const { type } = useParams<{ type: string }>()
@@ -50,8 +56,10 @@ const Create: React.FC = () => {
 
     try {
       const slug = Math.random().toString(36).substring(2, 15)
+      const isBirthday = type === PAGE_TYPES.BIRTHDAY || type === PAGE_TYPES.BIRTHDAY_ADVANCE
       const pageData = {
         ...formData,
+        occasion: isBirthday ? OCCASIONS.BIRTHDAY : formData.occasion,
         slug,
         is_anonymous: type === PAGE_TYPES.ANONYMOUS
       }
@@ -78,9 +86,9 @@ const Create: React.FC = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { value: TONES.ROMANTIC, label: '💕 Romantic', desc: 'Sweet and heartfelt' },
-          { value: TONES.PLAYFUL, label: '😄 Playful', desc: 'Fun and lighthearted' },
-          { value: TONES.MIXED, label: '🌈 Mixed', desc: 'A bit of everything' }
+          { value: TONES.ROMANTIC, label: 'Romantic', desc: 'Sweet and heartfelt' },
+          { value: TONES.PLAYFUL, label: 'Playful', desc: 'Fun and lighthearted' },
+          { value: TONES.MIXED, label: 'Mixed', desc: 'A bit of everything' }
         ].map((tone) => (
           <motion.div
             key={tone.value}
@@ -103,70 +111,6 @@ const Create: React.FC = () => {
 
   const renderContentForm = () => {
     switch (type) {
-      case PAGE_TYPES.MESSAGE:
-        return (
-          <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
-            <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Receiver's Name
-              </label>
-              <input
-                type="text"
-                value={formData.content.receiverName || ''}
-                onChange={(e) => handleContentChange('receiverName', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="Enter their name..."
-              />
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title
-              </label>
-              <input
-                type="text"
-                value={formData.content.title || ''}
-                onChange={(e) => handleContentChange('title', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="A title for your message..."
-              />
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Message ({(formData.content.message || '').length}/{MAX_MESSAGE_LENGTH})
-              </label>
-              <textarea
-                value={formData.content.message || ''}
-                onChange={(e) => handleContentChange('message', e.target.value.slice(0, MAX_MESSAGE_LENGTH))}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-romantic-500 focus:border-transparent h-32"
-                placeholder="Write your heartfelt message..."
-              />
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Background Style
-              </label>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {BACKGROUND_STYLES.map((style) => (
-                  <div
-                    key={style.id}
-                    onClick={() => handleContentChange('backgroundStyle', style.id)}
-                    className={`p-3 rounded-lg cursor-pointer border-2 text-center ${formData.content.backgroundStyle === style.id
-                      ? 'border-romantic-500'
-                      : 'border-gray-200'
-                      }`}
-                  >
-                    <div className={`h-8 rounded mb-2 ${style.class}`}></div>
-                    <div className="text-xs">{style.name}</div>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )
-
       case PAGE_TYPES.VALENTINE:
         return (
           <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
@@ -205,7 +149,7 @@ const Create: React.FC = () => {
                 value={formData.content.yesButtonText || ''}
                 onChange={(e) => handleContentChange('yesButtonText', e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="Yes! 💕"
+                placeholder="Yes!"
               />
             </motion.div>
 
@@ -219,6 +163,19 @@ const Create: React.FC = () => {
                 onChange={(e) => handleContentChange('noButtonText', e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 placeholder="No"
+              />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dedication Song (Optional)
+              </label>
+              <input
+                type="text"
+                value={formData.content.songLink || ''}
+                onChange={(e) => handleContentChange('songLink', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                placeholder="Spotify or YouTube link"
               />
             </motion.div>
           </motion.div>
@@ -288,53 +245,249 @@ const Create: React.FC = () => {
                 placeholder="With love, Your Name"
               />
             </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dedication Song (Optional)
+              </label>
+              <input
+                type="text"
+                value={formData.content.songLink || ''}
+                onChange={(e) => handleContentChange('songLink', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                placeholder="Spotify or YouTube link"
+              />
+            </motion.div>
           </motion.div>
         )
 
-      case PAGE_TYPES.ANONYMOUS:
+      case PAGE_TYPES.BIRTHDAY:
         return (
           <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
             <motion.div variants={itemVariants}>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Your Message
+                Birthday Person
               </label>
-              <textarea
-                value={formData.content.message || ''}
-                onChange={(e) => handleContentChange('message', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent h-32"
-                placeholder="Share your feelings anonymously..."
-                maxLength={MAX_MESSAGE_LENGTH}
+              <input
+                type="text"
+                value={formData.content.receiverName || ''}
+                onChange={(e) => handleContentChange('receiverName', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                placeholder="Their name..."
               />
-              <div className="text-sm text-gray-500 mt-1">
-                {(formData.content.message || '').length}/{MAX_MESSAGE_LENGTH}
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Birthday Date
+                </label>
+                <input
+                  type="date"
+                  value={formData.content.birthdayDate || ''}
+                  onChange={(e) => handleContentChange('birthdayDate', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Age (Optional)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={formData.content.age || ''}
+                  onChange={(e) => handleContentChange('age', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  placeholder="e.g. 21"
+                />
               </div>
             </motion.div>
 
             <motion.div variants={itemVariants}>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Optional Hint (Optional)
+                Birthday Message
               </label>
-              <input
-                type="text"
-                value={formData.content.hint || ''}
-                onChange={(e) => handleContentChange('hint', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="A subtle hint about who you are..."
+              <textarea
+                value={formData.content.customMessage || ''}
+                onChange={(e) => handleContentChange('customMessage', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent h-32"
+                placeholder="Write a sweet birthday message..."
+                maxLength={MAX_MESSAGE_LENGTH}
               />
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <label className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={formData.content.allowReply || false}
-                  onChange={(e) => handleContentChange('allowReply', e.target.checked)}
-                  className="w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500"
-                />
-                <span className="text-sm font-medium text-gray-700">
-                  Allow replies from the receiver
-                </span>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Signature
               </label>
+              <input
+                type="text"
+                value={formData.content.signature || ''}
+                onChange={(e) => handleContentChange('signature', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                placeholder="From, Your Name"
+              />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dedication Song (Optional)
+              </label>
+              <input
+                type="text"
+                value={formData.content.songLink || ''}
+                onChange={(e) => handleContentChange('songLink', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                placeholder="Spotify or YouTube link"
+              />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Theme
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {birthdayThemes.map((theme) => (
+                  <div
+                    key={theme.id}
+                    onClick={() => handleContentChange('theme', theme.id)}
+                    className={`p-3 rounded-lg cursor-pointer border-2 text-center ${formData.content.theme === theme.id
+                      ? 'border-amber-500'
+                      : 'border-gray-200'
+                      }`}
+                  >
+                    <div className={`h-8 rounded mb-2 ${theme.class}`}></div>
+                    <div className="text-xs">{theme.name}</div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+        )
+
+      case PAGE_TYPES.BIRTHDAY_ADVANCE:
+        return (
+          <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Birthday Person
+              </label>
+              <input
+                type="text"
+                value={formData.content.receiverName || ''}
+                onChange={(e) => handleContentChange('receiverName', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Their name..."
+              />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Birthday Date
+              </label>
+              <input
+                type="date"
+                value={formData.content.birthdayDate || ''}
+                onChange={(e) => handleContentChange('birthdayDate', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Countdown Message
+              </label>
+              <input
+                type="text"
+                value={formData.content.countdownMessage || ''}
+                onChange={(e) => handleContentChange('countdownMessage', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Only a few days to go..."
+              />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Plan Highlights (one per line)
+              </label>
+              <textarea
+                value={formData.content.planHighlights || ''}
+                onChange={(e) => handleContentChange('planHighlights', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent h-28"
+                placeholder="Breakfast surprise\nPhoto session\nDinner date"
+              />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Surprise Note
+              </label>
+              <textarea
+                value={formData.content.surpriseNote || ''}
+                onChange={(e) => handleContentChange('surpriseNote', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent h-24"
+                placeholder="A little note about what's coming..."
+              />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Gift Ideas (optional)
+              </label>
+              <textarea
+                value={formData.content.giftIdeas || ''}
+                onChange={(e) => handleContentChange('giftIdeas', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent h-24"
+                placeholder="Luxury flowers, hand-written letter..."
+              />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Playlist Link (optional)
+              </label>
+              <input
+                type="text"
+                value={formData.content.playlistLink || ''}
+                onChange={(e) => handleContentChange('playlistLink', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Spotify or YouTube link"
+              />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Dedication Song (Optional)
+              </label>
+              <input
+                type="text"
+                value={formData.content.songLink || ''}
+                onChange={(e) => handleContentChange('songLink', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Spotify or YouTube link"
+              />
+            </motion.div>
+
+            <motion.div variants={itemVariants}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Theme
+              </label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {birthdayThemes.map((theme) => (
+                  <div
+                    key={theme.id}
+                    onClick={() => handleContentChange('theme', theme.id)}
+                    className={`p-3 rounded-lg cursor-pointer border-2 text-center ${formData.content.theme === theme.id
+                      ? 'border-indigo-500'
+                      : 'border-gray-200'
+                      }`}
+                  >
+                    <div className={`h-8 rounded mb-2 ${theme.class}`}></div>
+                    <div className="text-xs">{theme.name}</div>
+                  </div>
+                ))}
+              </div>
             </motion.div>
           </motion.div>
         )
@@ -360,7 +513,7 @@ const Create: React.FC = () => {
                 Upload Photos (Coming Soon)
               </label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <div className="text-4xl mb-2">📸</div>
+                <div className="text-4xl mb-2">Photo</div>
                 <p className="text-gray-600">Photo upload will be available after setting up Cloudinary</p>
               </div>
             </motion.div>
@@ -373,63 +526,6 @@ const Create: React.FC = () => {
                 value={formData.content.closingMessage || ''}
                 onChange={(e) => handleContentChange('closingMessage', e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent h-24"
-                placeholder="A final heartfelt message..."
-              />
-            </motion.div>
-          </motion.div>
-        )
-
-      case PAGE_TYPES.QA:
-        return (
-          <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-6">
-            <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Receiver's Name
-              </label>
-              <input
-                type="text"
-                value={formData.content.receiverName || ''}
-                onChange={(e) => handleContentChange('receiverName', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="Enter their name..."
-              />
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Q&A Answers
-              </label>
-              <div className="space-y-3">
-                {[
-                  "What's your favorite memory together?",
-                  "What do you love most about them?",
-                  "What are you looking forward to?"
-                ].map((question, index) => (
-                  <div key={index} className="space-y-1">
-                    <label className="text-sm text-gray-600">{question}</label>
-                    <textarea
-                      value={formData.content.answers?.[index] || ''}
-                      onChange={(e) => {
-                        const answers = [...(formData.content.answers || [])]
-                        answers[index] = e.target.value
-                        handleContentChange('answers', answers)
-                      }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent h-20"
-                      placeholder="Your answer..."
-                    />
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div variants={itemVariants}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Final Note
-              </label>
-              <textarea
-                value={formData.content.finalNote || ''}
-                onChange={(e) => handleContentChange('finalNote', e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent h-20"
                 placeholder="A final heartfelt message..."
               />
             </motion.div>
@@ -451,7 +547,7 @@ const Create: React.FC = () => {
           className="text-center mb-8"
         >
           <h1 className="text-3xl md:text-4xl font-bold text-pink-600 mb-2">
-            Create Your {config.title.split(' ').slice(1).join(' ')}
+            Create Your {config.title}
           </h1>
           <div className="flex justify-center space-x-2 mb-4">
             {[1, 2, 3].map((s) => (
@@ -478,14 +574,14 @@ const Create: React.FC = () => {
               onClick={() => setStep(1)}
               className="btn-secondary"
             >
-              ← Back
+              Back
             </button>
             <button
               onClick={handleSubmit}
               disabled={loading}
               className="btn-primary"
             >
-              {loading ? 'Creating...' : 'Create Page →'}
+              {loading ? 'Creating...' : 'Create Page'}
             </button>
           </motion.div>
         )}

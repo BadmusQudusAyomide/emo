@@ -1,8 +1,72 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { PAGE_TYPE_CONFIG, PAGE_TYPES } from '../utils/constants'
+import { Calendar, Gift, Heart, Image, Inbox, Sparkles } from 'lucide-react'
+import { PAGE_TYPES } from '../utils/constants'
 import { fadeInUp, containerVariants, itemVariants } from '../utils/animations'
+
+const cards = [
+  {
+    type: PAGE_TYPES.BIRTHDAY,
+    title: 'Birthday Page',
+    description: 'A beautiful birthday page with a personal note.',
+    time: '1 min',
+    icon: Gift,
+    accent: 'from-amber-100 to-rose-50',
+    border: 'border-amber-200',
+    text: 'text-amber-900'
+  },
+  {
+    type: PAGE_TYPES.BIRTHDAY_ADVANCE,
+    title: 'Birthday In Advance',
+    description: 'Premium birthday plan with countdown and surprises.',
+    time: '2 min',
+    icon: Calendar,
+    accent: 'from-indigo-100 to-slate-50',
+    border: 'border-indigo-200',
+    text: 'text-slate-900'
+  },
+  {
+    type: PAGE_TYPES.ANONYMOUS,
+    title: 'Anonymous Inbox',
+    description: 'Generate a link and collect messages in one place.',
+    time: '30 sec',
+    icon: Inbox,
+    accent: 'from-amber-100 to-orange-50',
+    border: 'border-amber-300',
+    text: 'text-amber-900'
+  },
+  {
+    type: PAGE_TYPES.MEMORY,
+    title: 'Memory Page',
+    description: 'Share memories and moments in a visual layout.',
+    time: '2 min',
+    icon: Image,
+    accent: 'from-emerald-100 to-teal-50',
+    border: 'border-emerald-200',
+    text: 'text-emerald-900'
+  },
+  {
+    type: PAGE_TYPES.VALENTINE,
+    title: 'Valentine Page',
+    description: 'Playful proposal card with a fun twist.',
+    time: '1 min',
+    icon: Heart,
+    accent: 'from-rose-100 to-pink-50',
+    border: 'border-rose-200',
+    text: 'text-rose-900'
+  },
+  {
+    type: PAGE_TYPES.VALENTINE_WISH,
+    title: 'Valentine Wish',
+    description: 'Send a beautiful wish with a personal note.',
+    time: '1 min',
+    icon: Sparkles,
+    accent: 'from-violet-100 to-slate-50',
+    border: 'border-violet-200',
+    text: 'text-slate-900'
+  }
+]
 
 const ChooseType: React.FC = () => {
   const navigate = useNavigate()
@@ -17,18 +81,22 @@ const ChooseType: React.FC = () => {
 
   return (
     <div className="min-h-screen px-4 py-12">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <motion.div
           initial="initial"
           animate="animate"
           variants={fadeInUp}
           className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-pink-600 mb-4">
-            Choose Your Message Type
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-sm font-semibold">
+            <Sparkles size={14} />
+            Choose a format
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mt-4">
+            Pick the page you want to create
           </h1>
-          <p className="text-xl text-gray-600">
-            Select the perfect way to express your feelings
+          <p className="text-lg text-slate-600 mt-3">
+            Each page creates a shareable link you can send instantly.
           </p>
         </motion.div>
 
@@ -38,31 +106,30 @@ const ChooseType: React.FC = () => {
           animate="visible"
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
-          {Object.entries(PAGE_TYPE_CONFIG).map(([type, config]) => {
-            const isAnonymous = type === PAGE_TYPES.ANONYMOUS
+          {cards.map((card) => {
+            const Icon = card.icon
             return (
-              <motion.div
-                key={type}
+              <motion.button
+                key={card.type}
                 variants={itemVariants}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => handleTypeSelect(type)}
-                className={`p-6 rounded-xl cursor-pointer border-2 transition-all ${
-                  isAnonymous
-                    ? 'border-[#7A3E00] bg-[#FFF8ED] shadow-[0_10px_30px_rgba(122,62,0,0.15)]'
-                    : 'border-gray-200 hover:border-pink-300'
-                }`}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleTypeSelect(card.type)}
+                className={`text-left p-6 rounded-2xl border ${card.border} bg-gradient-to-br ${card.accent} shadow-[0_12px_30px_rgba(15,23,42,0.08)] transition-all`}
               >
-                <div className="text-4xl mb-4 text-center">
-                  {config.title.split(' ')[0]}
+                <div className="flex items-center justify-between">
+                  <div className={`w-12 h-12 rounded-xl bg-white/90 border ${card.border} flex items-center justify-center ${card.text}`}>
+                    <Icon size={22} />
+                  </div>
+                  <div className="text-xs font-semibold text-slate-600 bg-white/80 border border-slate-200 rounded-full px-2 py-1">
+                    {card.time}
+                  </div>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  {isAnonymous ? 'Anonymous Inbox' : config.title.split(' ').slice(1).join(' ')}
-                </h3>
-                <p className="text-gray-600 text-sm">
-                  {isAnonymous ? 'Generate a link and collect messages in one place' : config.description}
-                </p>
-              </motion.div>
+                <div className="mt-5">
+                  <h3 className={`text-xl font-semibold ${card.text}`}>{card.title}</h3>
+                  <p className="text-sm text-slate-600 mt-2">{card.description}</p>
+                </div>
+              </motion.button>
             )
           })}
         </motion.div>
@@ -75,9 +142,9 @@ const ChooseType: React.FC = () => {
         >
           <Link
             to="/"
-            className="text-gray-500 hover:text-gray-700 underline"
+            className="text-slate-500 hover:text-slate-700 underline"
           >
-            ← Back to Home
+            Back to home
           </Link>
         </motion.div>
       </div>

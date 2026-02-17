@@ -1,3 +1,4 @@
+﻿
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -7,7 +8,7 @@ import { BACKGROUND_STYLES, VALENTINE_WISH_TYPES } from '../utils/constants'
 
 // Floating hearts component
 const FloatingHearts = () => {
-  const hearts = ['❤️', '💕', '💖', '💗', '💝', '💘']
+  const hearts = ['?', '??', '??', '??', '??', '??']
   const [floatingHearts, setFloatingHearts] = useState<Array<{ id: number, emoji: string, left: number, delay: number }>>([])
 
   useEffect(() => {
@@ -47,6 +48,71 @@ const FloatingHearts = () => {
   )
 }
 
+const FloatingBubbles = () => {
+  const bubbles = Array.from({ length: 12 }, (_, i) => ({
+    id: i,
+    size: 18 + Math.random() * 24,
+    left: Math.random() * 100,
+    delay: Math.random() * 6,
+    duration: 10 + Math.random() * 6
+  }))
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      {bubbles.map((bubble) => (
+        <motion.div
+          key={bubble.id}
+          initial={{ y: '110vh', opacity: 0 }}
+          animate={{ y: '-20vh', opacity: [0, 0.6, 0], x: [0, bubble.left - 50, bubble.left - 50] }}
+          transition={{
+            duration: bubble.duration,
+            ease: 'easeOut',
+            repeat: Infinity,
+            delay: bubble.delay
+          }}
+          className="absolute rounded-full border border-white/50 bg-white/40 backdrop-blur-sm"
+          style={{ left: `${bubble.left}%`, width: bubble.size, height: bubble.size }}
+        />
+      ))}
+    </div>
+  )
+}
+
+const Confetti = () => {
+  const confetti = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 4,
+    duration: 6 + Math.random() * 4
+  }))
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      {confetti.map((piece) => (
+        <motion.div
+          key={piece.id}
+          initial={{ y: '-10vh', opacity: 0 }}
+          animate={{ y: '110vh', opacity: [0, 1, 0], rotate: [0, 180, 360] }}
+          transition={{
+            duration: piece.duration,
+            ease: 'easeInOut',
+            repeat: Infinity,
+            delay: piece.delay
+          }}
+          className="absolute w-2 h-4 rounded-sm bg-gradient-to-b from-amber-400 to-pink-400"
+          style={{ left: `${piece.left}%` }}
+        />
+      ))}
+    </div>
+  )
+}
+
+const birthdayThemes = {
+  gold: 'bg-gradient-to-br from-amber-50 to-rose-50',
+  sky: 'bg-gradient-to-br from-sky-50 to-blue-50',
+  garden: 'bg-gradient-to-br from-emerald-50 to-teal-50'
+} as const
+
 const ViewPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>()
 
@@ -59,15 +125,14 @@ const ViewPage: React.FC = () => {
   const [noAttempts, setNoAttempts] = useState(0)
   const [showCelebration, setShowCelebration] = useState(false)
   const [isValentineDay, setIsValentineDay] = useState(false)
+  const [timeLeft, setTimeLeft] = useState<{ days: number, hours: number, minutes: number, seconds: number } | null>(null)
 
-  // Check if it's Valentine's Day
   useEffect(() => {
     const today = new Date()
-    const isValentines = today.getMonth() === 1 && today.getDate() === 14 // February 14th
+    const isValentines = today.getMonth() === 1 && today.getDate() === 14
     setIsValentineDay(isValentines)
   }, [])
 
-  // Countdown timer
   useEffect(() => {
     if (started && countdown > 0) {
       const timer = setTimeout(() => {
@@ -79,7 +144,6 @@ const ViewPage: React.FC = () => {
     }
   }, [started, countdown])
 
-  // Auto-start countdown when page loads
   useEffect(() => {
     if (page && !started) {
       setStarted(true)
@@ -103,6 +167,30 @@ const ViewPage: React.FC = () => {
 
     fetchPage()
   }, [slug])
+
+  useEffect(() => {
+    if (!page?.content?.birthdayDate) return
+
+    const updateTime = () => {
+      const target = new Date(page.content.birthdayDate)
+      if (Number.isNaN(target.getTime())) {
+        setTimeLeft(null)
+        return
+      }
+
+      const diffMs = Math.max(target.getTime() - Date.now(), 0)
+      const days = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+      const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((diffMs % (1000 * 60)) / 1000)
+
+      setTimeLeft({ days, hours, minutes, seconds })
+    }
+
+    updateTime()
+    const timer = setInterval(updateTime, 1000)
+    return () => clearInterval(timer)
+  }, [page?.content?.birthdayDate])
 
   const handleNoButtonClick = () => {
     const newAttempts = noAttempts + 1
@@ -132,32 +220,30 @@ const ViewPage: React.FC = () => {
     return style ? style.class : 'bg-gradient-to-br from-pink-50 to-pink-100'
   }
 
+  const getBirthdayThemeClass = () => {
+    const theme = page?.content?.theme || 'gold'
+    return birthdayThemes[theme as keyof typeof birthdayThemes] || birthdayThemes.gold
+  }
+
+  const getDaysToBirthday = () => {
+    if (!page?.content?.birthdayDate) return null
+    const today = new Date()
+    const target = new Date(page.content.birthdayDate)
+    if (Number.isNaN(target.getTime())) return null
+    const diff = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    return diff
+  }
   const renderValentineWishPage = () => {
-    console.log('🎯 Rendering Valentine Wish Page')
-    console.log('📄 Page data:', page)
-    console.log('📝 Page content:', page.content)
-    console.log('🏷️ Wish type:', page.content.wishType)
-    console.log('👤 Receiver name:', page.content.receiverName)
-    console.log('💬 Custom message:', page.content.customMessage)
-    console.log('✍️ Signature:', page.content.signature)
-    console.log('💝 Show message state:', showMessage)
-    console.log('💝 Started state:', started)
-
     const wishType = VALENTINE_WISH_TYPES.find(w => w.id === page.content.wishType)
-    const template = wishType?.template || 'Happy Valentine\'s Day!'
+    const template = wishType?.template || "Happy Valentine's Day!"
     const personalizedMessage = template.replace('{name}', page.content.receiverName || 'You')
-
-    console.log('💌 Personalized message:', personalizedMessage)
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 to-pink-100 flex items-center justify-center px-4 relative">
-        {/* Floating hearts for Valentine's Day */}
         {isValentineDay && <FloatingHearts />}
 
         <div className="max-w-2xl w-full text-center z-10">
-          <div className="text-6xl sm:text-8xl mb-8">
-            💝
-          </div>
+          <div className="text-6xl sm:text-8xl mb-8">??</div>
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-pink-900 mb-8">
             Happy Valentine's Day!
@@ -169,9 +255,7 @@ const ViewPage: React.FC = () => {
             </h2>
 
             <div className="text-base sm:text-lg text-black leading-relaxed space-y-4">
-              <p className="text-black font-medium">
-                {personalizedMessage}
-              </p>
+              <p className="text-black font-medium">{personalizedMessage}</p>
               {page.content.customMessage && (
                 <p className="italic text-pink-900 font-bold bg-pink-50 p-3 rounded-lg">
                   "{page.content.customMessage}"
@@ -183,69 +267,29 @@ const ViewPage: React.FC = () => {
               <div className="mt-6 sm:mt-8 text-base sm:text-lg font-bold text-pink-900 border-t-4 border-pink-400 pt-4">
                 With all my love,<br />
                 <span className="text-pink-800">{page.content.signature}</span>
-                <div className="text-2xl mt-2">💕</div>
+                <div className="text-2xl mt-2">??</div>
               </div>
             )}
           </div>
 
-          <div className="text-4xl sm:text-6xl">
-            💕
-          </div>
+          {page.content.songLink && (
+            <div className="mt-6">
+              <a
+                href={page.content.songLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 bg-pink-600 hover:bg-pink-700 text-white text-sm font-semibold px-4 py-2 rounded-full"
+              >
+                Play our song
+              </a>
+            </div>
+          )}
+
+          <div className="text-4xl sm:text-6xl mt-6">??</div>
         </div>
       </div>
     )
   }
-
-  const renderMessagePage = () => (
-    <motion.div
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className={`min-h-screen ${getBackgroundClass()} flex items-center justify-center px-4 relative`}
-    >
-      {/* Floating hearts for Valentine's Day */}
-      {isValentineDay && <FloatingHearts />}
-
-      <div className="max-w-2xl w-full text-center z-10">
-        <motion.h1
-          variants={itemVariants}
-          className="text-3xl sm:text-4xl md:text-5xl font-bold text-blue-900 mb-8"
-          animate={{ textShadow: ['0 0 20px rgba(59,130,246,0.3)', '0 0 40px rgba(59,130,246,0.2)', '0 0 20px rgba(59,130,246,0.3)'] }}
-          transition={{ duration: 4, repeat: Infinity }}
-        >
-          {page.content.title}
-        </motion.h1>
-
-        <motion.h2
-          variants={itemVariants}
-          className="text-xl sm:text-2xl text-blue-700 mb-12"
-          animate={{ y: [0, -5, 0] }}
-          transition={{ duration: 3, repeat: Infinity }}
-        >
-          Dear {page.content.receiverName},
-        </motion.h2>
-
-        <motion.div
-          variants={itemVariants}
-          className="bg-white/90 backdrop-blur rounded-2xl p-6 sm:p-8 shadow-xl"
-          whileHover={{ scale: 1.02 }}
-        >
-          <p className="text-base sm:text-lg text-gray-700 leading-relaxed whitespace-pre-wrap">
-            {page.content.message}
-          </p>
-        </motion.div>
-
-        <motion.div
-          variants={itemVariants}
-          className="mt-12"
-          animate={{ scale: [1, 1.2, 1] }}
-          transition={{ duration: 2, repeat: Infinity }}
-        >
-          <div className="text-4xl sm:text-6xl">💕</div>
-        </motion.div>
-      </div>
-    </motion.div>
-  )
 
   const renderValentinePage = () => (
     <motion.div
@@ -254,7 +298,6 @@ const ViewPage: React.FC = () => {
       animate="visible"
       className={`min-h-screen ${getBackgroundClass()} flex items-center justify-center px-4 relative`}
     >
-      {/* Floating hearts for Valentine's Day */}
       {isValentineDay && <FloatingHearts />}
 
       <div className="max-w-2xl w-full text-center z-10">
@@ -281,7 +324,7 @@ const ViewPage: React.FC = () => {
             animate={{ rotate: [0, 15, -15, 0] }}
             transition={{ duration: 4, repeat: Infinity }}
           >
-            💘
+            ??
           </motion.div>
         </motion.div>
 
@@ -297,7 +340,7 @@ const ViewPage: React.FC = () => {
                 onClick={handleYesButtonClick}
                 className="btn-primary text-lg sm:text-xl px-6 sm:px-8 py-3 sm:py-4 relative overflow-hidden group"
               >
-                <span className="relative z-10">{page.content.yesButtonText || 'Yes! 💕'}</span>
+                <span className="relative z-10">{page.content.yesButtonText || 'Yes!'}</span>
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-pink-400 to-red-400"
                   initial={{ x: '-100%' }}
@@ -322,6 +365,19 @@ const ViewPage: React.FC = () => {
           )}
         </AnimatePresence>
 
+        {page.content.songLink && (
+          <div className="mt-8">
+            <a
+              href={page.content.songLink}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 bg-pink-600 hover:bg-pink-700 text-white text-sm font-semibold px-4 py-2 rounded-full"
+            >
+              Play our song
+            </a>
+          </div>
+        )}
+
         <AnimatePresence>
           {showCelebration && (
             <motion.div
@@ -333,25 +389,24 @@ const ViewPage: React.FC = () => {
               <motion.div
                 className="text-4xl sm:text-6xl mb-4"
                 animate={{ rotate: [0, 360, 720, 0] }}
-                transition={{ duration: 2, ease: "easeInOut" }}
+                transition={{ duration: 2, ease: 'easeInOut' }}
               >
-                🎉
+                ??
               </motion.div>
               <h2 className="text-2xl sm:text-3xl font-bold text-pink-600 mb-4">
-                {noAttempts >= 5 ? 'I knew it! 💕' : 'Yay! 💕'}
+                {noAttempts >= 5 ? 'I knew it!' : 'Yay!'}
               </h2>
               <p className="text-lg sm:text-xl text-gray-700">
                 This is going to be amazing!
               </p>
 
-              {/* Celebration hearts */}
               <motion.div
                 className="flex justify-center gap-2 mt-6"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
               >
-                {['💕', '💖', '💗', '💝'].map((heart, index) => (
+                {['??', '??', '??', '??'].map((heart, index) => (
                   <motion.div
                     key={index}
                     initial={{ scale: 0, rotate: -180 }}
@@ -369,7 +424,235 @@ const ViewPage: React.FC = () => {
       </div>
     </motion.div>
   )
+  const renderBirthdayPage = () => {
+    const name = page.content.receiverName || 'you'
+    const age = page.content.age ? `${page.content.age}` : null
 
+    return (
+      <div className={`min-h-screen ${getBirthdayThemeClass()} flex items-center justify-center px-4 py-12 relative overflow-hidden`}>
+        <FloatingBubbles />
+        <Confetti />
+        <div className="absolute -top-24 -right-16 w-72 h-72 rounded-full bg-white/40 blur-3xl" />
+        <div className="absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-white/40 blur-3xl" />
+        <div className="max-w-3xl w-full text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-white/90 backdrop-blur rounded-3xl p-6 sm:p-10 shadow-2xl border border-white relative"
+          >
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold uppercase tracking-wide">
+              Birthday Celebration
+            </div>
+
+            <div className="mt-6 text-5xl sm:text-6xl">??</div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mt-4">
+              Happy Birthday, {name}!
+            </h1>
+            <p className="text-slate-600 mt-3">
+              {age ? `Celebrating ${age} amazing years.` : 'Today is all about you.'}
+            </p>
+
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
+              <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+                <div className="text-xs uppercase tracking-wide text-slate-500">Message</div>
+                <div className="mt-3 text-slate-700 text-base leading-relaxed">
+                  {page.content.customMessage || 'Wishing you joy, laughter, and everything you love most.'}
+                </div>
+              </div>
+              <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+                <div className="text-xs uppercase tracking-wide text-slate-500">Highlights</div>
+                <div className="mt-3 space-y-2 text-slate-700 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-amber-400" />
+                    <span>{page.content.birthdayDate ? `Birthday: ${page.content.birthdayDate}` : 'Set the special date'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-rose-400" />
+                    <span>{age ? `Turning ${age}` : 'New memories ahead'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-400" />
+                    <span>Celebrate in style</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {page.content.signature && (
+              <div className="mt-8 text-slate-700 font-semibold">
+                With love, {page.content.signature}
+              </div>
+            )}
+
+            {page.content.songLink && (
+              <div className="mt-6">
+                <a
+                  href={page.content.songLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-5 py-3 rounded-full"
+                >
+                  Play the birthday song
+                </a>
+              </div>
+            )}
+          </motion.div>
+        </div>
+      </div>
+    )
+  }
+
+const renderBirthdayAdvancePage = () => {
+    const daysLeft = getDaysToBirthday()
+    const highlights = (page.content.planHighlights || '').split('\n').filter(Boolean)
+    const displayTime = timeLeft || {
+      days: typeof daysLeft === 'number' ? Math.max(daysLeft, 0) : 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0
+    }
+
+    return (
+      <div className={`min-h-screen ${getBirthdayThemeClass()} px-4 py-12 relative`}>
+        <FloatingBubbles />
+        <Confetti />
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center"
+          >
+            <div className="text-5xl sm:text-6xl">??</div>
+            <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mt-4">
+              Birthday Countdown for {page.content.receiverName || 'someone special'}
+            </h1>
+            <p className="text-slate-600 mt-2">
+              {page.content.countdownMessage || 'Something special is on the way.'}
+            </p>
+
+            {typeof daysLeft === 'number' && (
+              <div className="mt-6 inline-flex items-center gap-3 bg-white/90 border border-white rounded-full px-5 py-2 text-slate-700 font-semibold">
+                <span className="text-2xl">{daysLeft > 0 ? daysLeft : 0}</span>
+                <span className="text-sm">days to go</span>
+              </div>
+            )}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.08 }}
+            className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3"
+          >
+            {[
+              { label: 'Days', value: displayTime.days },
+              { label: 'Hours', value: displayTime.hours },
+              { label: 'Minutes', value: displayTime.minutes },
+              { label: 'Seconds', value: displayTime.seconds }
+            ].map((item) => (
+              <div key={item.label} className="bg-white/90 backdrop-blur rounded-2xl p-4 border border-white shadow-lg text-center">
+                <motion.div
+                  key={item.value}
+                  initial={{ scale: 0.9, opacity: 0.4 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2 }}
+                  className="text-2xl sm:text-3xl font-semibold text-slate-900"
+                >
+                  {String(item.value).padStart(2, '0')}
+                </motion.div>
+                <div className="text-xs uppercase tracking-wide text-slate-500 mt-1">{item.label}</div>
+              </div>
+            ))}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.08 }}
+            className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
+            <div className="bg-white/90 backdrop-blur rounded-2xl p-5 border border-white shadow-lg">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Countdown</div>
+              <div className="mt-2 text-3xl font-semibold text-slate-900">{daysLeft ? Math.max(daysLeft, 0) : '--'}</div>
+              <div className="text-sm text-slate-600">Days left</div>
+            </div>
+            <div className="bg-white/90 backdrop-blur rounded-2xl p-5 border border-white shadow-lg">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Theme</div>
+              <div className="mt-2 text-xl font-semibold text-slate-900">{page.content.theme || 'Gold Glow'}</div>
+              <div className="text-sm text-slate-600">Chosen mood</div>
+            </div>
+            <div className="bg-white/90 backdrop-blur rounded-2xl p-5 border border-white shadow-lg">
+              <div className="text-xs uppercase tracking-wide text-slate-500">Special note</div>
+              <div className="mt-2 text-sm text-slate-700">{page.content.surpriseNote || 'Something sweet is coming.'}</div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6"
+          >
+            <div className="bg-white/90 backdrop-blur rounded-2xl p-6 border border-white shadow-xl">
+              <h2 className="text-lg font-semibold text-slate-900">Plan Highlights</h2>
+              <ul className="mt-4 space-y-2 text-slate-700">
+                {highlights.length === 0 ? (
+                  <li>Surprise breakfast</li>
+                ) : (
+                  highlights.map((item: string, index: number) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <span className="text-amber-500">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+
+            <div className="bg-white/90 backdrop-blur rounded-2xl p-6 border border-white shadow-xl">
+              <h2 className="text-lg font-semibold text-slate-900">Surprise Note</h2>
+              <p className="mt-4 text-slate-700 leading-relaxed">
+                {page.content.surpriseNote || 'There is a special moment planned just for you.'}
+              </p>
+            </div>
+
+            <div className="bg-white/90 backdrop-blur rounded-2xl p-6 border border-white shadow-xl">
+              <h2 className="text-lg font-semibold text-slate-900">Extras</h2>
+              <div className="mt-4 text-slate-700 space-y-3">
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-slate-500">Gift ideas</div>
+                  <div>{page.content.giftIdeas || 'A handwritten letter and flowers.'}</div>
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-slate-500">Playlist</div>
+                  <div>{page.content.playlistLink || 'Add a link to the birthday playlist.'}</div>
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-slate-500">Birthday date</div>
+                  <div>{page.content.birthdayDate || 'Set a date'}</div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {page.content.songLink && (
+            <div className="mt-8 text-center">
+              <a
+                href={page.content.songLink}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold px-5 py-3 rounded-full"
+              >
+                Play the dedication song
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
   const renderAnonymousPage = () => {
     const [responses, setResponses] = useState<any[]>([])
     const [newResponse, setNewResponse] = useState('')
@@ -377,15 +660,11 @@ const ViewPage: React.FC = () => {
     const [showThankYou, setShowThankYou] = useState(false)
     const [showCreateOptions, setShowCreateOptions] = useState(false)
 
-    // Handle anonymous response submission
     const handleSubmitResponse = async () => {
       if (!newResponse.trim()) return
 
       setIsSubmitting(true)
       try {
-        // Save response to Supabase
-        // await saveResponse(page.id, newResponse)
-
         setShowThankYou(true)
         setTimeout(() => {
           setShowCreateOptions(true)
@@ -397,11 +676,9 @@ const ViewPage: React.FC = () => {
       }
     }
 
-    // Check if this is the page owner (you'd implement proper auth)
-    const isOwner = false // This would be based on authentication
+    const isOwner = false
 
     if (isOwner) {
-      // Owner view - see all responses
       return (
         <motion.div
           variants={containerVariants}
@@ -409,7 +686,6 @@ const ViewPage: React.FC = () => {
           animate="visible"
           className={`min-h-screen ${getBackgroundClass()} px-4 py-8 relative`}
         >
-          {/* Floating hearts for Valentine's Day */}
           {isValentineDay && <FloatingHearts />}
 
           <div className="max-w-4xl mx-auto z-10">
@@ -418,7 +694,7 @@ const ViewPage: React.FC = () => {
               animate={{ scale: 1, opacity: 1 }}
               className="text-center mb-8"
             >
-              <div className="text-6xl mb-4">🤐</div>
+              <div className="text-6xl mb-4">??</div>
               <h1 className="text-3xl sm:text-4xl font-bold text-purple-700 mb-4">
                 Anonymous Confessions
               </h1>
@@ -444,7 +720,7 @@ const ViewPage: React.FC = () => {
 
               {responses.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-4xl mb-4">📭</div>
+                  <div className="text-4xl mb-4">??</div>
                   <p className="text-gray-500">No anonymous messages yet</p>
                   <p className="text-sm text-gray-400 mt-2">
                     Share your link to start receiving messages!
@@ -461,7 +737,7 @@ const ViewPage: React.FC = () => {
                       className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200"
                     >
                       <div className="flex items-start space-x-3">
-                        <div className="text-2xl">🤫</div>
+                        <div className="text-2xl">??</div>
                         <div className="flex-1">
                           <p className="text-gray-700 leading-relaxed">
                             {response.response}
@@ -485,13 +761,13 @@ const ViewPage: React.FC = () => {
                 onClick={() => navigator.clipboard.writeText(`${window.location.origin}/view/${slug}`)}
                 className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 mr-4"
               >
-                📋 Copy Link
+                Copy Link
               </button>
               <button
-                onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Someone wants to tell you something anonymously! 🤫\n\n${window.location.origin}/view/${slug}`)}`, '_blank')}
+                onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`Someone wants to tell you something anonymously!\n\n${window.location.origin}/view/${slug}`)}`, '_blank')}
                 className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
               >
-                📱 Share on WhatsApp
+                Share on WhatsApp
               </button>
             </motion.div>
           </div>
@@ -499,7 +775,6 @@ const ViewPage: React.FC = () => {
       )
     }
 
-    // Anonymous user view - submit response
     return (
       <motion.div
         variants={containerVariants}
@@ -507,7 +782,6 @@ const ViewPage: React.FC = () => {
         animate="visible"
         className={`min-h-screen ${getBackgroundClass()} flex items-center justify-center px-4 relative`}
       >
-        {/* Floating hearts for Valentine's Day */}
         {isValentineDay && <FloatingHearts />}
 
         <div className="max-w-2xl w-full z-10">
@@ -518,7 +792,7 @@ const ViewPage: React.FC = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 className="text-center mb-8"
               >
-                <div className="text-6xl mb-4 animate-bounce">🤫</div>
+                <div className="text-6xl mb-4 animate-bounce">??</div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-purple-700 mb-4">
                   Anonymous Confession
                 </h1>
@@ -533,7 +807,7 @@ const ViewPage: React.FC = () => {
               >
                 <div className="mb-6">
                   <label className="block text-lg font-medium text-gray-700 mb-3">
-                    {page.content.hint || "Tell me something you like about me..."}
+                    {page.content.hint || 'Tell me something you like about me...'}
                   </label>
                   <textarea
                     value={newResponse}
@@ -560,17 +834,17 @@ const ViewPage: React.FC = () => {
                       Sending...
                     </span>
                   ) : (
-                    'Send Anonymously 🤫'
+                    'Send Anonymously'
                   )}
                 </motion.button>
 
                 <div className="mt-6 text-center">
                   <p className="text-sm text-gray-500">
-                    🔒 Your message is completely anonymous
+                    Your message is completely anonymous
                   </p>
                   {page.content.allowReply && (
                     <p className="text-sm text-purple-600 mt-2">
-                      💬 The owner can reply to your message
+                      The owner can reply to your message
                     </p>
                   )}
                 </div>
@@ -582,9 +856,9 @@ const ViewPage: React.FC = () => {
               animate={{ scale: 1, opacity: 1 }}
               className="text-center"
             >
-              <div className="text-6xl mb-4">✨</div>
+              <div className="text-6xl mb-4">?</div>
               <h2 className="text-2xl font-bold text-purple-700 mb-4">
-                Thank you! 🤫
+                Thank you!
               </h2>
               <p className="text-lg text-gray-600 mb-8">
                 Your anonymous message has been sent successfully
@@ -606,7 +880,7 @@ const ViewPage: React.FC = () => {
                   onClick={() => window.location.href = '/choose-type'}
                   className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
                 >
-                  Create Your Link 🤫
+                  Create Your Link
                 </button>
                 <button
                   onClick={() => {
@@ -652,7 +926,6 @@ const ViewPage: React.FC = () => {
         animate={{ opacity: 1 }}
         className="min-h-screen bg-gradient-to-br from-pink-50 to-pink-100 flex items-center justify-center px-4 relative"
       >
-        {/* Floating hearts for Valentine's Day */}
         {isValentineDay && <FloatingHearts />}
 
         <div className="text-center max-w-md w-full z-10">
@@ -661,7 +934,7 @@ const ViewPage: React.FC = () => {
             transition={{ duration: 2, repeat: Infinity }}
             className="text-4xl sm:text-6xl mb-6"
           >
-            💖
+            ??
           </motion.div>
           <h1 className="text-2xl sm:text-3xl font-bold text-pink-600 mb-4">
             Someone made this just for you
@@ -675,8 +948,7 @@ const ViewPage: React.FC = () => {
             onClick={() => setStarted(true)}
             className="btn-primary text-lg px-6 sm:px-8 py-3 sm:py-4 relative overflow-hidden w-full sm:w-auto"
           >
-            <span className="relative z-10">Open Your Message 💝</span>
-            {/* Animated background effect */}
+            <span className="relative z-10">Open Your Message</span>
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-pink-400 to-red-400"
               initial={{ x: '-100%' }}
@@ -693,7 +965,7 @@ const ViewPage: React.FC = () => {
               className="mt-8 text-center"
             >
               <div className="inline-flex items-center space-x-2 text-pink-500">
-                <span className="text-sm">✨ Happy Valentine's Day! ✨</span>
+                <span className="text-sm">Happy Valentine's Day!</span>
               </div>
             </motion.div>
           )}
@@ -702,7 +974,6 @@ const ViewPage: React.FC = () => {
     )
   }
 
-  // Countdown screen
   if (started && !showMessage) {
     return (
       <motion.div
@@ -710,7 +981,6 @@ const ViewPage: React.FC = () => {
         animate={{ opacity: 1 }}
         className="min-h-screen bg-gradient-to-br from-pink-50 to-pink-100 flex items-center justify-center px-4 relative"
       >
-        {/* Floating hearts for Valentine's Day */}
         {isValentineDay && <FloatingHearts />}
 
         <div className="text-center z-10">
@@ -719,7 +989,7 @@ const ViewPage: React.FC = () => {
             transition={{ duration: 1, repeat: Infinity }}
             className="text-6xl sm:text-8xl mb-8"
           >
-            💝
+            ??
           </motion.div>
 
           <h2 className="text-2xl sm:text-3xl font-bold text-pink-600 mb-4">
@@ -741,8 +1011,7 @@ const ViewPage: React.FC = () => {
               {[1, 2, 3, 4, 5].map((num) => (
                 <div
                   key={num}
-                  className={`w-3 h-3 rounded-full ${num <= 5 - countdown ? 'bg-pink-400' : 'bg-pink-200'
-                    }`}
+                  className={`w-3 h-3 rounded-full ${num <= 5 - countdown ? 'bg-pink-400' : 'bg-pink-200'}`}
                 />
               ))}
             </div>
@@ -753,20 +1022,17 @@ const ViewPage: React.FC = () => {
   }
 
   switch (page.type) {
-    case 'message':
-      console.log('🎯 Rendering message page')
-      return renderMessagePage()
     case 'valentine':
-      console.log('🎯 Rendering valentine page')
       return renderValentinePage()
     case 'valentine_wish':
-      console.log('🎯 Rendering valentine_wish page')
       return renderValentineWishPage()
     case 'anonymous':
-      console.log('🎯 Rendering anonymous page')
       return renderAnonymousPage()
+    case 'birthday':
+      return renderBirthdayPage()
+    case 'birthday_advance':
+      return renderBirthdayAdvancePage()
     default:
-      console.log('❌ Page type not implemented:', page.type)
       return <div>Page type not implemented yet</div>
   }
 }
